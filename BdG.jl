@@ -1,7 +1,11 @@
-include("ChebyshevPolynomial.jl")
-module bdg
-    import chebyshev
-    import Plots
+using Distributed
+@everywhere module Bdgeq
+    
+    include("./ChebyshevPolynomial.jl")
+    using SparseArrays
+    using LinearAlgebra
+    using .Chebyshev
+    #import Plots
     export iteration,calc_A
 
 
@@ -197,12 +201,14 @@ module bdg
     function iteration(nc,Nx,Ny,aa,bb,ωc,U,initialΔ,μ,full,vortex,itemax)
 
         if vortex
-            Δ = speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
-            Δold = speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
+            Δ = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny)
+        
+            #speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
+            Δold = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny) #speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
             A = calc_A_vortex(Nx,Ny,μ,Δ,aa)
         else   
-            Δ = speye(Nx*Ny,Nx*Ny)*initialΔ
-            Δold = speye(Nx*Ny,Nx*Ny)*initialΔ     
+            Δ = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny)#speye(Nx*Ny,Nx*Ny)*initialΔ
+            Δold = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny) #speye(Nx*Ny,Nx*Ny)*initialΔ     
             A = calc_A(Nx,Ny,μ,Δ,aa)        
         end
         mat_Δ = zeros(typeof(Δ[1,1]),Nx,Ny)    
@@ -210,9 +216,9 @@ module bdg
         for ite=1:itemax
             
             if full
-               @time Δ = chebyshev.calc_meanfields(A,Nx,Ny,ωc) 
+               @time Δ = calc_meanfields(A,Nx,Ny,ωc) 
             else
-               @time Δ = chebyshev.calc_meanfields(nc,A,Nx,Ny,aa,bb,ωc)
+               @time Δ = calc_meanfields(nc,A,Nx,Ny,aa,bb,ωc)
             end
            
             
