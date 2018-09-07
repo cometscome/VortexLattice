@@ -9,8 +9,21 @@ using Distributed
     export iteration,calc_A
 
 
+    #mφ #Number of vortices in the unit cell
+"""
+    calc_A_vortex(Nx,Ny,μ,Δ,aa,mφ)
 
-    function calc_A_vortex(Nx,Ny,μ,Δ,aa)
+    Calculate the Hamiltonian in 2D square lattice
+    Nx: Number of sites in x-direction
+    Ny: Number of sites in y-direction
+    μ: Chemical Potential
+    Δ: Given order parameters
+    aa: Renormalize factor, which is used in Chebyshev polynomial method
+    mφ: Number of vortices in the unit cell
+
+
+"""
+    function calc_A_vortex(Nx,Ny,μ,Δ,aa,mφ)
         Ln = Nx*Ny*2
         A = spzeros(Complex{Float64},Ln,Ln)
         u1 = zeros(Float64,2)
@@ -21,6 +34,7 @@ using Distributed
         u1[2] = 0.0
         u2[1] = 0.0
         u2[2] = Ny
+        
         
         
 
@@ -50,7 +64,11 @@ using Distributed
                     n = 0
                     R[:] = u1[:]  
                     
-                    χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny)
+                    if mφ == 1
+                        χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny)
+                    elseif mφ == 2
+                        χ = - mφ*π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) -(m-n)*π/2
+                    end
                 end
               
                 jj = (jy-1)*Nx+jx
@@ -69,7 +87,11 @@ using Distributed
                     n = 0
                     R[:] = -u1[:] 
                     
-                    χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) 
+                    if mφ == 1
+                        χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) 
+                    elseif mφ == 2
+                        χ = - mφ*π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) -(m-n)*π/2
+                    end
                 end
             
                 jj = (jy-1)*Nx+jx
@@ -88,7 +110,11 @@ using Distributed
                     m = 0
                     n = 1
                     R[:] = u2[:]  
-                    χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) 
+                    if mφ == 1
+                        χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) 
+                    elseif mφ == 2
+                        χ = - mφ*π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) -(m-n)*π/2
+                    end
                 end
                 jj = (jy-1)*Nx+jx
                 A[ii,jj] = -1.0*exp(im*(Θ+χ))
@@ -104,7 +130,12 @@ using Distributed
                     m = 0
                     n = -1
                     R[:] = -u2[:] 
-                    χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny)                  
+                    if mφ == 1
+                        χ = - π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny) 
+                    elseif mφ == 2
+                        χ = - mφ*π*(R[1]*(ry+2r0[2]) - R[2]*(rx+2r0[1]))/(2*Nx*Ny)   -(m-n)*π/2  
+                    end
+                    
                 end            
                 jj = (jy-1)*Nx+jx
                 A[ii,jj] = -1.0*exp(im*(Θ+χ))           
@@ -198,14 +229,27 @@ using Distributed
     end
 
 
-    function iteration(nc,Nx,Ny,aa,bb,ωc,U,initialΔ,μ,full,vortex,itemax)
+    function iteration(nc,Nx,Ny,aa,bb,ωc,U,initialΔ,μ,full,vortex,itemax,mφ)
 
         if vortex
             Δ = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny)
         
             #speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
             Δold = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny) #speye(Nx*Ny,Nx*Ny)*(initialΔ+0*im)
-            A = calc_A_vortex(Nx,Ny,μ,Δ,aa)
+            if mφ == 2
+                for ix=1:Nx
+                    for iy=1:Ny
+                        ii = (iy-1)*Nx+ix
+                        rx,ry = calc_r(ix,iy,Nx,Ny)
+                        φ = atan(ry,rx)
+                        φ +=  (atan(ry+(Ny)/2,rx+(Nx)/2)+atan(ry-(Ny)/2,rx-(Nx)/2)
+                            +atan(ry+(Ny)/2,rx-(Nx)/2)+atan(ry-(Ny)/2,rx+(Nx)/2))
+                        Δ[ii,ii] = Δ[ii,ii]*exp(-im*φ)
+                    end
+                end
+            
+            end
+            A = calc_A_vortex(Nx,Ny,μ,Δ,aa,mφ)
         else   
             Δ = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny)#speye(Nx*Ny,Nx*Ny)*initialΔ
             Δold = sparse((initialΔ+0*im)*I, Nx*Ny, Nx*Ny) #speye(Nx*Ny,Nx*Ny)*initialΔ     

@@ -36,8 +36,7 @@ end
        
         cc = spzeros(typeof(A[1,Nx*Ny]),Nx*Ny,Nx*Ny)
         A = Matrix(A)
-        w,v = eigen(A)
-        
+        w,v = eigen(A)        
         
     
         for ix=1:Nx
@@ -49,7 +48,8 @@ end
                 for i=1:Nx*Ny*2
                     if w[i] <= 0.0
                         if abs(w[i]) <= ωc
-                            cc[ii,ii]+=conj(v[ii,i])*v[jj,i]
+                            #cc[ii,ii]+=conj(v[ii,i])*v[jj,i]
+                            cc[ii,ii]+=conj(v[jj,i])*v[ii,i]
                         end
                     end
                 end
