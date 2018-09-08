@@ -58,7 +58,7 @@ using Distributed
                 jx = ifelse(ix == Nx,1,ix+1)
                 periodic_x = ifelse(ix == Nx,+1,0)            
                 jy = iy            
-                Θ = - π*ry/(2*Nx*Ny) 
+                Θ = - mφ*π*ry/(2*Nx*Ny) 
                 if periodic_x == 1
                     m = 1
                     n = 0
@@ -79,7 +79,7 @@ using Distributed
                 χ = 0.0
                 jx = ifelse(ix == 1,Nx,ix-1)
                 periodic_x = ifelse(ix == 1,-1,0)  
-                Θ =  π*ry/(2*Nx*Ny)
+                Θ =  mφ*π*ry/(2*Nx*Ny)
               
                 jy = iy
                 if periodic_x == -1
@@ -105,7 +105,7 @@ using Distributed
                 jx = ix
                 jy = ifelse(iy == Ny,1,iy+1)
                 periodic_y = ifelse(iy == Ny,+1,0)
-                Θ =  π*rx/(2*Nx*Ny)
+                Θ =  mφ*π*rx/(2*Nx*Ny)
                 if periodic_y == 1
                     m = 0
                     n = 1
@@ -125,7 +125,7 @@ using Distributed
                 jx = ix
                 jy = ifelse(iy == 1,Ny,iy-1)
                 periodic_y = ifelse(iy == 1,-1,0)
-                Θ = - π*rx/(2*Nx*Ny)
+                Θ = - mφ*π*rx/(2*Nx*Ny)
                 if periodic_y == -1
                     m = 0
                     n = -1
