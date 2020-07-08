@@ -5,6 +5,8 @@ The codes are written by Julia 0.6.2.
 
 Now I confirmed that the codes work in Julia 1.0.0.
 
+[Jul. 8 2020] This code works in Julia 1.3 or later.
+
 
 Julia is a high-level, high-performance dynamic programming language for numerical computing.   
 https://julialang.org   

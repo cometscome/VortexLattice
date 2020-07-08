@@ -12,6 +12,7 @@ U = -2.2 #Interaction
 initialΔ = 0.1 #Initial guess for the superconducting gap
 μ = -1.5 #Chemical potential
 mφ = 1
+println("Nx x Ny: $Nx x $Ny")
 
 println("Chebyshev method")
 full = false #Full diagonalization or not

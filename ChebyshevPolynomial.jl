@@ -28,6 +28,7 @@ end
 
     function calc_meanfield_i(ii,nc,A,aa,bb,ωc,Nx,Ny)
         jj = ii + Nx*Ny
+        #vec_ai = calc_polynomials_easytoread(nc,ii,jj,A)
         vec_ai = calc_polynomials(nc,ii,jj,A)
         return calc_meanfield(vec_ai,aa,bb,ωc,nc)
     end
@@ -70,6 +71,35 @@ end
     end
 
     function calc_polynomials(nc,left_i,right_j,A)
+        Ln = size(A,1) 
+        
+        typeA = eltype(A)
+
+        vec_ai = zeros(typeA,nc)
+        vec_js = Array{Array{typeA,1}}(undef,2)
+        ptr = Int8[1,2] #This is a pointer array
+        vec_js[ptr[1]] = zeros(typeA,Ln)
+        vec_js[ptr[2]] = zeros(typeA,Ln)
+
+        vec_js[ptr[1]][right_j] = 1.0
+
+        nn = 0
+        vec_ai[nn+1] = vec_js[ptr[1]][left_i]
+        nn = 1
+        mul!(vec_js[ptr[2]], A, vec_js[ptr[1]])
+        vec_ai[nn+1] = vec_js[ptr[2]][left_i]
+
+        @inbounds for nn=2:nc-1
+            #mul!(C, A, B, α, β) -> C   A B α + C β
+            mul!(vec_js[ptr[1]],A,vec_js[ptr[2]],2,-1)
+            vec_ai[nn+1] = vec_js[ptr[1]][left_i]
+            ptr[1],ptr[2] = ptr[2],ptr[1]
+        end
+
+        return vec_ai
+    end
+
+    function calc_polynomials_easytoread(nc,left_i,right_j,A)
         Ln = size(A,1) 
         typeA = typeof(A[1,1])
         vec_jnmm = zeros(typeA,Ln)
